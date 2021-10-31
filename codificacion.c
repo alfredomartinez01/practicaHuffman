@@ -14,15 +14,17 @@ typedef struct arbol{
 }arbol;
 
 typedef struct lista{
-    arbol ar;
+    arbol *ar;
     struct lista *siguiente;
 }lista;
 
 unsigned long detallesArchivo(FILE *cod);
-void agregarLista(lista **l, arbol a);
+void agregarLista(lista **l, arbol *a);
 void mergeSort(lista **l);
 lista *mezcla(lista *a, lista *b);
 void sublistas(lista *l, lista **delante, lista**atras);
+lista* crearArbol(lista *l);
+arbol *unirArboles(arbol *aMayor, arbol *aMenor);
 
 /*
     Función para obtener los detalles del archivo, en este caso nos interesa el tamaño.
@@ -51,7 +53,7 @@ unsigned long detallesArchivo(FILE *cod){
     en este caso el arbol con el dato y la frecuencia
     Retorna el nuevo elemento 
 */
-void agregarLista(lista **l, arbol a){
+void agregarLista(lista **l, arbol *a){
     lista *nuevoArbol; //creamos una variable para alamacenar el dato
     nuevoArbol = (lista *)malloc(sizeof(lista)); //le asignamos espacio al dato
     nuevoArbol->ar = a; //guardamos el arbol en el nuevo nodo
@@ -70,7 +72,7 @@ void imprimirLista(lista *l){
     int k = 0;
     //Mientras la lista no sea NULL ingresa al while
      while(l != NULL){
-        printf("\n%d\t%c\t%d ",++k, l->ar.dato,l->ar.frec); //imprime el dato del arbol actual
+        printf("\n%c\t%d", l->ar->dato,l->ar->frec); //imprime el dato del arbol actual
         // printf("\nFrecuencia %d ", l->ar.frec); //imprime la frecuencia del arbol actual
         l = l->siguiente; //avanzamos al siguiente nodo de la lista
     }
@@ -121,7 +123,7 @@ lista *mezcla(lista *a, lista *b){
         a la función para hacer la misma comparación, pero con el siguiente nodo
         Si la comparación no se cumple entonces el resultado se asigna a b y se repite lo anterior.
     */
-    if(a->ar.frec <= b->ar.frec){
+    if(a->ar->frec <= b->ar->frec){
         resultado = a; 
         resultado->siguiente = mezcla(a->siguiente, b); //Llamada recursiva a a la mezcla
     }else{
@@ -158,6 +160,91 @@ void sublistas(lista *l, lista **delante, lista **atras){
     avanzaUnNodo->siguiente = NULL; //el siguiente nodo en NULL
 }
 
+/*
+    Función que escribe el archivo de frecuencias con los elementros dentro de la lista
+    Recibe la lista que contiene los elementos a escribir
+    No retorna nada, pero creo un archivo frecuencias.txt con los caracteres y su frecuencia
+*/
+void escribirArchivoFrecuencias(lista *l){
+    FILE *frecuencias; //variable para el archivo
+
+    frecuencias = fopen("frecuencias.txt", "wt"); //se abre o crea el archivo en modo escritura
+
+    //Recorremos la lista para impriomir en el archivo 
+    while(l != NULL){
+        //colocamos el caracter junto con su frecuencia
+        fprintf(frecuencias, "%c%d", l->ar->dato, l->ar->frec);
+        l = l->siguiente; //avanzamos al siguiente nodo
+    }
+
+    fclose(frecuencias); //Cerramos el archivo
+}
+
+/*
+    Funcion que crea el arbol a partir de ir uniendo dos arboles de la lista 
+    y sumando sus frecuencias.
+    Recibe la lista que contiene los arboles que se juntarán.
+    Regresa la lista con un solo arbol que fue unido
+*/
+lista* crearArbol(lista *l){
+    //vamos recorriendo  la lista mientras el siguiente nodo no sea nulo
+    while(l->siguiente != NULL){
+        //Establecemos dos listas, una donde se ira almacenando el arbol unido y otra que servira como auxilair 
+        lista *arbolUnido = l;
+        lista *aux = l;
+        //Como iremos comparando de dos en dos los arboles, recorremos la lista en dos elementos
+        l = l->siguiente->siguiente;
+
+        //mandamos a llamar la función que une los arboles
+        arbolUnido->ar = unirArboles(arbolUnido->siguiente->ar,arbolUnido->ar);
+        
+        /*
+            SI la lista es nula o si la frecuencia del arbol unido anteriormente es menor
+            a la frecuencia del arbol, haremos que el nuevo elemento de la lista sea el elemento
+            desde el cual se recorrio la lista y la lista será el elemento unido
+        */
+        if(l == NULL || arbolUnido->ar->frec <= l->ar->frec ){
+            arbolUnido->siguiente = l; //el siguiente elemento será al que apunto al recorrer
+            l = arbolUnido; //la lista tserá el arbol unido
+        }
+        /*
+            Si la lista no es nula y la frecuencia del arbol unido es mayor a la del arbol
+            haremos uso del auxiliar guardando ahi la lista y avanzando hasta que se encuentre
+            la posicion correcta del nuevo nodo que es el arbol unido.
+        */
+        if(l != NULL && arbolUnido->ar->frec > l->ar->frec){
+            aux = l;
+            //Recorremos el auxiliar hasta que sea nulo o se encuentre un elemento mayor al arbol unido
+            while(aux->siguiente != NULL && arbolUnido->ar->frec > aux->ar->frec){
+                aux = aux->siguiente; //avanzamos en el auxiliar
+            }
+            arbolUnido->siguiente = aux->siguiente; //se le asigna la posicion donde se guardara el nuevo arbol
+            aux->siguiente = arbolUnido; //almacenamos el nuevo arbol en la posicion
+        }
+
+    }
+    
+    return l; //retornamos la lista unida
+
+}
+
+/*
+    Esta función une los arboles, para hacer esto se crea un nuevo arbol y se almacena en el
+    la frecuencia del arbol mayor y menor para asi formar un solo arbol
+    Recibe el arbol con el caracter con mayor frecuencia y un arbol con el caracter de menor frecuencia
+    Retorna el nuevo arbol que se almacenara en la lista
+*/
+arbol *unirArboles(arbol *aMayor, arbol *aMenor){
+    arbol *nuevo = (arbol *)malloc(sizeof(arbol)); //Creamos el nuevo arbol
+
+    nuevo->frec = aMayor->frec + aMenor->frec; //Sumamos las frecuencias del arbol
+    nuevo->izq = aMenor; //se le asigna a la izquierda el arbol con menor frecuencia
+    nuevo->der = aMayor; //se le asigna a la derecha el arbol con mayor frecuencia
+    nuevo->izq->etiqueta = 0; //a la izquierda lo etiquetamos con un 0
+    nuevo->der->etiqueta = 1; //a la derecha lo etiquetamos con un 1
+
+    return nuevo; //Retornamos el nuevo arbol
+}
 
 
 int main(int argc, char const *argv[])
@@ -168,7 +255,7 @@ int main(int argc, char const *argv[])
     int i = 0; //varibale para loops
     lista *l = NULL; //variable para la lista
     bool encontrado; //variable que servirá para saber si un elemento se encuentra en el arbol
-    arbol a; //variable para el arbol
+    arbol *a; //variable para el arbol
 
     printf("\nArchivo a codificar: ");
     scanf("%s", archivo); //leemos el nombre del archivo a codificar
@@ -197,8 +284,8 @@ int main(int argc, char const *argv[])
         //Recorremos la lista
         while( lAux != NULL ){
             //si el caracter de los datos ya esta en un arbol se incrementa su frecuencia
-            if(datos[i] == lAux->ar.dato){
-                lAux->ar.frec++;//incrementamos la frecuencia del caracter
+            if(datos[i] == lAux->ar->dato){
+                lAux->ar->frec++;//incrementamos la frecuencia del caracter
                 encontrado = true; //ponemos en true ya que se ha encontrado
 
                 // if(lAux->siguiente != NULL && lAux->siguiente->ar.frec < lAux->ar.frec){
@@ -214,8 +301,9 @@ int main(int argc, char const *argv[])
 
         //Si no esta el elemento lo agregamos al arbol y su frecuencia será de 0
         if(!encontrado){
-            a.dato = datos[i]; //se iguala al caracter actual
-            a.frec = 1; //frecuencia en 0
+            a = (arbol *)malloc(sizeof(arbol));
+            a->dato = datos[i]; //se iguala al caracter actual
+            a->frec = 1; //frecuencia en 0
 
             agregarLista(&l, a); //agregamos al inicio de la lista
         }
@@ -228,11 +316,16 @@ int main(int argc, char const *argv[])
     mergeSort(&l);
 
     //Imrpimimos valores de la lista solo para corroborar que esten bien las frecuencias
-    printf("\n LIsta ordenada\n");
-    imprimirLista(l);
+    // printf("\n LIsta ordenada\n");
+    // imprimirLista(l);
 
-    
-    
+    escribirArchivoFrecuencias(l);
+
+    //se juntan los arboles de la lista en uno solo
+    l = crearArbol(l);
+
+    printf("\nLista ordenada\n");
+    imprimirLista(l);
     
     printf("\n\n");
     return 0;
