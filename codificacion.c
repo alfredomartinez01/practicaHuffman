@@ -3,28 +3,91 @@
 #include <string.h>
 #include <stdbool.h> //para datos booleanos
 #include <sys/stat.h> //para saber detalles de archivos
+#include "definiciones.h"
 
+int main(int argc, char const *argv[])
+{
+    unsigned long tam; //vairbale que almacena el tamaño del archivo
+    char archivo[50]; //variable que almacena el nombre del archivo a leer
+    FILE *frecuencias = NULL, *cod = NULL; //Variables para los archivos
+    int i = 0; //varibale para loops
+    lista *l = NULL; //variable para la lista
+    bool encontrado; //variable que servirá para saber si un elemento se encuentra en el arbol
+    arbol *a; //variable para el arbol
 
-typedef struct arbol{
-    int etiqueta; //la etiqueta será 0 o 1
-    int frec; //frecuencia
-    char dato; //Dato
-    struct arbol *izq;
-    struct arbol *der;
-}arbol;
+    printf("\nArchivo a codificar: ");
+    scanf("%s", archivo); //leemos el nombre del archivo a codificar
 
-typedef struct lista{
-    arbol *ar;
-    struct lista *siguiente;
-}lista;
+    cod = fopen(archivo,"rb"); //abrimos el archivo en modo lectura binaria
+    
+    if(cod == NULL){ //si el archivo es nulo
+        perror("\nNombre incorrecto o no existe el archivo");
+        exit(1); //salimos del programa
+    }
 
-unsigned long detallesArchivo(FILE *cod);
-void agregarLista(lista **l, arbol *a);
-void mergeSort(lista **l);
-lista *mezcla(lista *a, lista *b);
-void sublistas(lista *l, lista **delante, lista**atras);
-lista* crearArbol(lista *l);
-arbol *unirArboles(arbol *aMayor, arbol *aMenor);
+    //obtenemos los detalles del archivo, en este caso el tamaño
+    tam = detallesArchivo(cod); //lo almacenamos en tam
+    printf("\nEl tamaño del archivo a codificar es de %lu bytes\n", tam);//se imprime el tamaño del archivo en bytes
+
+    //una vez que tengamos el tamaño del archivo podemos pasar los datos del archivo a un arreglo de caracteres
+    char *datos = (char *)malloc(sizeof(char)*tam); //establecemos el tamaño del archivo
+    //con ayuda de fread pasamos el contenido del archivo al arreglo anterior
+    fread(datos, sizeof(char),tam,cod);
+    // for(i=0;i<tam;i++)
+    //     printf("\n%c\n",datos[i]); //para verificar datos del archivo
+
+    while(i < tam){
+        encontrado = false; //al inicio sera false (se uso stdbool.h)
+        lista *lAux = l;//lista auxiliar para recorrerla
+        //Recorremos la lista
+        while( lAux != NULL ){
+            //si el caracter de los datos ya esta en un arbol se incrementa su frecuencia
+            if(datos[i] == lAux->ar->dato){
+                lAux->ar->frec++;//incrementamos la frecuencia del caracter
+                encontrado = true; //ponemos en true ya que se ha encontrado
+
+                // if(lAux->siguiente != NULL && lAux->siguiente->ar.frec < lAux->ar.frec){
+                //     arbol aux;
+                //     aux = lAux->ar;
+                //     lAux->ar = lAux->siguiente->ar;
+                //     lAux->siguiente->ar = aux;
+                // }
+            }
+
+            lAux = lAux->siguiente; //Avanzamos al siguiente nodo de la lista
+        }
+
+        //Si no esta el elemento lo agregamos al arbol y su frecuencia será de 0
+        if(!encontrado){
+            a = (arbol *)malloc(sizeof(arbol));
+            a->dato = datos[i]; //se iguala al caracter actual
+            a->frec = 1; //frecuencia en 0
+
+            agregarLista(&l, a); //agregamos al inicio de la lista
+        }
+        i++; //incrementamos i en uno
+    }
+    //Para verificar que se impriman bien los caracteres
+    imprimirLista(l);
+
+    //ordenamos la lista y los arboles dentro de ella de menor a mayor frecuencia usando merge
+    mergeSort(&l);
+
+    //Imrpimimos valores de la lista solo para corroborar que esten bien las frecuencias
+    // printf("\n LIsta ordenada\n");
+    // imprimirLista(l);
+
+    escribirArchivoFrecuencias(l);
+
+    //se juntan los arboles de la lista en uno solo
+    l = crearArbol(l);
+
+    printf("\nLista ordenada\n");
+    imprimirLista(l);
+    
+    printf("\n\n");
+    return 0;
+}
 
 /*
     Función para obtener los detalles del archivo, en este caso nos interesa el tamaño.
@@ -246,87 +309,3 @@ arbol *unirArboles(arbol *aMayor, arbol *aMenor){
     return nuevo; //Retornamos el nuevo arbol
 }
 
-
-int main(int argc, char const *argv[])
-{
-    unsigned long tam; //vairbale que almacena el tamaño del archivo
-    char archivo[50]; //variable que almacena el nombre del archivo a leer
-    FILE *frecuencias = NULL, *cod = NULL; //Variables para los archivos
-    int i = 0; //varibale para loops
-    lista *l = NULL; //variable para la lista
-    bool encontrado; //variable que servirá para saber si un elemento se encuentra en el arbol
-    arbol *a; //variable para el arbol
-
-    printf("\nArchivo a codificar: ");
-    scanf("%s", archivo); //leemos el nombre del archivo a codificar
-
-    cod = fopen(archivo,"rb"); //abrimos el archivo en modo lectura binaria
-    
-    if(cod == NULL){ //si el archivo es nulo
-        perror("\nNombre incorrecto o no existe el archivo");
-        exit(1); //salimos del programa
-    }
-
-    //obtenemos los detalles del archivo, en este caso el tamaño
-    tam = detallesArchivo(cod); //lo almacenamos en tam
-    printf("\nEl tamaño del archivo a codificar es de %lu bytes\n", tam);//se imprime el tamaño del archivo en bytes
-
-    //una vez que tengamos el tamaño del archivo podemos pasar los datos del archivo a un arreglo de caracteres
-    char *datos = (char *)malloc(sizeof(char)*tam); //establecemos el tamaño del archivo
-    //con ayuda de fread pasamos el contenido del archivo al arreglo anterior
-    fread(datos, sizeof(char),tam,cod);
-    // for(i=0;i<tam;i++)
-    //     printf("\n%c\n",datos[i]); //para verificar datos del archivo
-
-    while(i < tam){
-        encontrado = false; //al inicio sera false (se uso stdbool.h)
-        lista *lAux = l;//lista auxiliar para recorrerla
-        //Recorremos la lista
-        while( lAux != NULL ){
-            //si el caracter de los datos ya esta en un arbol se incrementa su frecuencia
-            if(datos[i] == lAux->ar->dato){
-                lAux->ar->frec++;//incrementamos la frecuencia del caracter
-                encontrado = true; //ponemos en true ya que se ha encontrado
-
-                // if(lAux->siguiente != NULL && lAux->siguiente->ar.frec < lAux->ar.frec){
-                //     arbol aux;
-                //     aux = lAux->ar;
-                //     lAux->ar = lAux->siguiente->ar;
-                //     lAux->siguiente->ar = aux;
-                // }
-            }
-
-            lAux = lAux->siguiente; //Avanzamos al siguiente nodo de la lista
-        }
-
-        //Si no esta el elemento lo agregamos al arbol y su frecuencia será de 0
-        if(!encontrado){
-            a = (arbol *)malloc(sizeof(arbol));
-            a->dato = datos[i]; //se iguala al caracter actual
-            a->frec = 1; //frecuencia en 0
-
-            agregarLista(&l, a); //agregamos al inicio de la lista
-        }
-        i++; //incrementamos i en uno
-    }
-    //Para verificar que se impriman bien los caracteres
-    imprimirLista(l);
-
-    //ordenamos la lista y los arboles dentro de ella de menor a mayor frecuencia usando merge
-    mergeSort(&l);
-
-    //Imrpimimos valores de la lista solo para corroborar que esten bien las frecuencias
-    // printf("\n LIsta ordenada\n");
-    // imprimirLista(l);
-
-    escribirArchivoFrecuencias(l);
-
-    //se juntan los arboles de la lista en uno solo
-    l = crearArbol(l);
-
-    printf("\nLista ordenada\n");
-    imprimirLista(l);
-    
-    printf("\n\n");
-    return 0;
-}
