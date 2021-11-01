@@ -1,3 +1,4 @@
+#include <stdio.h>
 
 /*DEFINICIÓN DE LAS ESTRUCTURAS*/
 typedef struct arbol{
@@ -21,3 +22,6 @@ lista *mezcla(lista *a, lista *b);
 void sublistas(lista *l, lista **delante, lista**atras);
 lista* crearArbol(lista *l);
 arbol *unirArboles(arbol *aMayor, arbol *aMenor);
+int codificar(arbol *nodo, int nivel, char *arregloBits, char elemento);
+void imprimirLista(lista *l);
+void escribirArchivoFrecuencias(lista *l);

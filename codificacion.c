@@ -5,6 +5,9 @@
 #include <sys/stat.h> //para saber detalles de archivos
 #include "definiciones.h"
 
+int nivelFinal; //nivel final de cada caracter en el arbol
+
+
 int main(int argc, char const *argv[])
 {
     unsigned long tam; //varibale que almacena el tamaño del archivo
@@ -14,6 +17,8 @@ int main(int argc, char const *argv[])
     lista *l = NULL; //variable para la lista
     bool encontrado; //variable que servirá para saber si un elemento se encuentra en el arbol
     arbol *a; //variable para el arbol
+    char arregloBits[256];
+
 
     printf("\nArchivo a codificar: ");
     scanf("%s", archivo); //leemos el nombre del archivo a codificar
@@ -84,6 +89,24 @@ int main(int argc, char const *argv[])
 
     printf("\nLista ordenada\n");
     imprimirLista(l);
+
+
+    // // codificar(l->ar, 0, arregloBits);
+    // char arregloSalida[256];
+    // int j;
+    // for(i=0;i<tam;i++){
+    //     codificar(l->ar, 0, arregloBits,  datos[i]);
+    //     for(j=0;j<j+nivelFinal;j+=nivelFinal){
+    //         arregloSalida[i] = arregloBits[i-j]; 
+    //     }
+
+    // }
+    // printf("\nNivel Final %d",nivelFinal);
+    
+    // for(i=0;i<257;i++){
+    //     printf("\nArreglo bits: %c", arregloBits[i]);
+
+    // }
     
     printf("\n\n");
     return 0;
@@ -309,3 +332,25 @@ arbol *unirArboles(arbol *aMayor, arbol *aMenor){
     return nuevo; //Retornamos el nuevo arbol
 }
 
+
+int codificar(arbol *nodo, int nivel, char *arregloBits, char elemento){
+
+    if(nodo != NULL){
+        if(nodo->dato == elemento){
+            nivelFinal = nivel;
+            return 1;
+        }
+        //Recorremos la derecha con una llamada recursiva a la función
+            arregloBits[nivel] = 1;
+        if(codificar(nodo->der, nivel+1, arregloBits, elemento)){
+            return 1;
+        }
+            arregloBits[nivel] = 0;
+        if(codificar(nodo->izq, nivel+1, arregloBits, elemento)){
+            return 1;
+        }
+    }
+
+    return 0;
+
+}
