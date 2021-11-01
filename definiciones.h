@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdbool.h>  //para datos booleanos
 
 /*DEFINICIÓN DE LAS ESTRUCTURAS*/
 typedef struct arbol
@@ -7,6 +8,7 @@ typedef struct arbol
     char dato;    //Dato
     struct arbol *izq;
     struct arbol *der;
+    bool visitado; //en false por que aun no se visita
 } arbol;
 
 typedef struct lista
@@ -18,6 +20,8 @@ typedef struct lista
 /*DEFINICIPON DE VARIABLES*/
 unsigned char *arregloSalida; //variable para el arreglo de salida
 unsigned char *arregloBits;   //variable para el arreglo de bits
+char bits[256];   //variable para el arreglo de bits
+char salida[256];   //variable para el arreglo de bits
 char caracter;       //variable para cada caracter a codificar en el árbol
 int nivelFinal; //nivel final de cada caracter en el arbol
 
@@ -31,4 +35,3 @@ void imprimirLista(lista *l);
 void escribirArchivoFrecuencias(lista *l);
 void imprimirArbol(arbol *a);
 int alturaArbol(arbol *a);
-void guardarCodificacion(char *arregloSalida, char *archivo, int tam);
