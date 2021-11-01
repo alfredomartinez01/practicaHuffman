@@ -24,9 +24,6 @@ int nivelFinal; //nivel final de cada caracter en el arbol
 /*DEFINICIÓN DE LAS FUNCIONES*/
 unsigned long detallesArchivo(FILE *cod);
 void agregarLista(lista **l, arbol *a);
-void mergeSort(lista **l);
-lista *mezcla(lista *a, lista *b);
-void sublistas(lista *l, lista **delante, lista **atras);
 lista *crearArbol(lista *l);
 arbol *unirArboles(arbol *aMayor, arbol *aMenor);
 int codificar(arbol *nodo, int nivel);
