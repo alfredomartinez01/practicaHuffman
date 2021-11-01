@@ -20,6 +20,7 @@ int main(int argc, char const *argv[])
     int bit = 7;                           //para hacer el corrimiento de bits
     char auxCara = 0;                      //Auxiliar que nos servirá para almacenar los caracteres codificados
 
+    // -------- COMENZAMOS CON LA LECTURA DEL ARCHIVO ----------
     printf("\nArchivo a codificar: ");
     scanf("%s", archivo); //leemos el nombre del archivo a codificar
 
@@ -39,9 +40,8 @@ int main(int argc, char const *argv[])
     char *datos = (char *)malloc(sizeof(char) * tam); //establecemos el tamaño del archivo
     //con ayuda de fread pasamos el contenido del archivo al arreglo anterior
     fread(datos, sizeof(char), tam, cod);
-    // for(i=0;i<tam;i++)
-    //     printf("\n%c\n",datos[i]); //para verificar datos del archivo
 
+    // -------- CREAMOS LA LISTA DE FRECUENCIAS ----------
     while (i < tam)
     {
         encontrado = false; //al inicio sera false (se uso stdbool.h)
@@ -77,9 +77,8 @@ int main(int argc, char const *argv[])
         if (!encontrado)
         {
             a = (arbol *)malloc(sizeof(arbol));
-            a->dato = datos[i];  //se iguala al caracter actual
-            a->frec = 1;         //frecuencia en 0
-            a->visitado = false; //no se ha visitado
+            a->dato = datos[i]; //se iguala al caracter actual
+            a->frec = 1;        //frecuencia en 0
 
             agregarLista(&l, a); //agregamos al inicio de la lista
         }
@@ -88,29 +87,28 @@ int main(int argc, char const *argv[])
     //Para verificar que se impriman bien y ordenados los caracteres
     imprimirLista(l);
 
+
+    // -------- ESCRIBIRMOS LA LISTA DE FRECUENCIAS EN EL ARCHIVO ----------
     escribirArchivoFrecuencias(l);
 
+
+    // -------- CREAMOS EL ÁRBOL ----------
     //se juntan los arboles de la lista en uno solo
     l = crearArbol(l);
 
     //Función para verificar que el arbol se haya unido correctamente
     // imprimirArbol(l->ar);
-
     altura = alturaArbol(l->ar);
-
     printf("\nLa altura el arbol es: %d\n", altura);
 
-    // Comenzando la etapa de codificación
-    int indice = 0;                                                                // Inicializamos el índice para el arreglo de salida
-    //arregloSalida = (unsigned char *)malloc(sizeof(unsigned char) * tam * altura); // Inicializamos el arreglo de salida que será el número de datos por el alto del árbol (para el peor caso)
-    arregloBits = (unsigned char *)malloc(sizeof(unsigned char) * altura);         // Inicializamos el arreglo de salida que será la altura del árbol (para el peor caso)
-    int j, m = 0;
+
+    // -------- CODIFICAMOS CADA UNO DE LOS CARACTERES ENCONTRADOS Y LO GUARDAMOS CADA BYTE EN UN ARREGLO ----------
+    int indice = 0; // Indice acumulador para detectar la cantidad de bits que se van codificando
+    arregloBitsTemp = (unsigned char *)malloc(sizeof(unsigned char) * altura); // Inicializamos el arreglo temporal que guardará los bits que será la altura del árbol (para el peor caso)
 
     FILE *codificado = NULL; //variable para el archivo codificado
-
     strcat(archivo, ".dat"); //concatenamos .dat para la salida del archivo
-
-    codificado = fopen(archivo, "wb");
+    codificado = fopen(archivo, "wb"); // Abrimos el archivo para escritura binaria
 
     // Recorremos cada uno de los caracteres a codificar y una vez codificados lo escribirmos en el archivo
     for (i = 0; i < tam; i++)
@@ -118,12 +116,12 @@ int main(int argc, char const *argv[])
         caracter = datos[i]; // Almacenamos temporalmente cada caracter
         nivelFinal = 0;      // Inicializamos en cero el nivel final
 
-        codificar(l->ar, 0); // Codificamos cada caracter sobre el arregloBits
+        codificar(l->ar, 0); // Codificamos cada caracter sobre el arregloBitsTemp
 
-        // Pasamos todos los bits del arreglo temporal (arregloBits) al archivo, verificando cuando se complete cada byte
-        for (j = indice; j < indice + nivelFinal; j++)
+        // Pasamos todos los bits del arreglo temporal (arregloBitsTemp) al archivo, verificando cuando se complete cada byte
+        for (int j = indice; j < indice + nivelFinal; j++)
         {
-            //si ya se hicieron todos los corrimientos
+            // Si ya se hicieron todos los corrimientos (se completó el byte)
             if (bit < 0)
             {
                 bit = 7;                            //comenzamos de nuevo los bits para los corrimientos
@@ -133,12 +131,14 @@ int main(int argc, char const *argv[])
 
             //Hacemos la compresion haciendo corrimientos ayudandonos de la variable bit
             //Así llevamos la cuenta de los bits procesados, cuando se procesan los 8 bits escribimos en el archivo
-            auxCara = auxCara | (arregloBits[j - indice] << bit);
+            auxCara = auxCara | (arregloBitsTemp[j - indice] << bit);
+
             // printf("auxCara: %c\n", auxCara);
+
             bit--; //vamos retrocediendo el bit para el corrimiento
         }
 
-        indice = (indice + nivelFinal); // Aumentamos el indice correspondiente a la cantidad de bits que se almacenaron en el arreglo de salida
+        indice = (indice + nivelFinal); // Aumentamos el indice correspondiente a la cantidad de bits que se escribieron en el archivo
     }
 
     // En caso de que hayan quedado un byte incompleto, lo escribimos en el archivo
@@ -146,7 +146,7 @@ int main(int argc, char const *argv[])
     {
         fprintf(codificado, "%c", auxCara); //imprimimos el caracter codificado en el archivo final
     }
-
+    
     fclose(codificado);
     printf("\nTamaño final de: %d\n", indice);
     printf("\n\n");
@@ -298,7 +298,7 @@ arbol *unirArboles(arbol *aMayor, arbol *aMenor)
 }
 
 /*
-    Función que codifica cada caracter para almacenar en arregloBits los bits correspondientes al camino sobre el árbol
+    Función que codifica cada caracter para almacenar en arregloBitsTemp los bits correspondientes al camino sobre el árbol
     Recibe el nodo del arbol y el nivel en que se encuentra sobre el mismo
     Devuelve 1 si encontró en si mismo o alguna de sus nodos hijos el dato, devuelve 0 en caso contrario
 */
@@ -307,32 +307,23 @@ int codificar(arbol *nodo, int nivel)
     // Si el nodo actual no está vacío
     if (nodo != NULL)
     {
-        // Comprobamos que el nodo no haya sido visitado
-        if (!nodo->visitado)
+        // En caso de que ya haya encontrado la hoja que contiene al caracter
+        if (nodo->dato == caracter)
         {
-
-            // En caso de que ya haya encontrado la hoja que contiene al caracter
-            if (nodo->dato == caracter)
-            {
-                nivelFinal = nivel;
-                //nodo->visitado = true;
-                // printf("dato:%c, nivel: %d\n",nodo->dato, nivelFinal);
-                return 1;
-            }
-            // Recorremos el nodo derecho para buscarlo
-            if (codificar(nodo->der, nivel + 1))
-            {
-                arregloBits[nivel] = 1;
-                // printf("Arreglo bits: %u\n", arregloBits[nivel]);
-                return 1;
-            }
-            // Recorremos el nodo izquierdo para buscarlos
-            if (codificar(nodo->izq, nivel + 1))
-            {
-                arregloBits[nivel] = 0;
-                //printf("Arreglo bits: %u\n", arregloBits[nivel]);
-                return 1;
-            }
+            nivelFinal = nivel;
+            return 1;
+        }
+        // Recorremos el nodo derecho para buscarlo
+        if (codificar(nodo->der, nivel + 1))
+        {
+            arregloBitsTemp[nivel] = 1;
+            return 1;
+        }
+        // Recorremos el nodo izquierdo para buscarlos
+        if (codificar(nodo->izq, nivel + 1))
+        {
+            arregloBitsTemp[nivel] = 0;
+            return 1;
         }
     }
 
@@ -347,8 +338,7 @@ int codificar(arbol *nodo, int nivel)
 */
 void imprimirArbol(arbol *a)
 {
-
-    //MIentras el nodo no sea NULL se imprime el valor
+    //Mientras el nodo no sea NULL se imprime el valor
     if (a != NULL)
     {
         imprimirArbol(a->izq); //imprimimos por la izquierda

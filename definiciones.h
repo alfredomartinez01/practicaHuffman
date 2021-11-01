@@ -8,7 +8,6 @@ typedef struct arbol
     char dato;    //Dato
     struct arbol *izq;
     struct arbol *der;
-    bool visitado; //en false por que aun no se visita
 } arbol;
 
 typedef struct lista
@@ -18,8 +17,7 @@ typedef struct lista
 } lista;
 
 /*DEFINICIPON DE VARIABLES*/
-unsigned char *arregloSalida; //variable para el arreglo de salida
-unsigned char *arregloBits;   //variable para el arreglo de bits
+unsigned char *arregloBitsTemp;   //variable para el arreglo de bits
 char bits[256];   //variable para el arreglo de bits
 char salida[256];   //variable para el arreglo de bits
 char caracter;       //variable para cada caracter a codificar en el árbol
