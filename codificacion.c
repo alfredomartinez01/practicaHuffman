@@ -5,7 +5,7 @@
 #include <sys/stat.h> //para saber detalles de archivos
 #include "definiciones.h"
 
-
+int altura = 0; //variable para la altura del arbol
 
 int main(int argc, char const *argv[])
 {
@@ -29,8 +29,8 @@ int main(int argc, char const *argv[])
     }
 
     //obtenemos los detalles del archivo, en este caso el tamaño
-    tam = detallesArchivo(cod);                                           //lo almacenamos en tam
-    printf("\nEl tamaño del archivo a codificar es de %lu bytes\n", tam); //se imprime el tamaño del archivo en bytes
+    tam = detallesArchivo(cod); //lo almacenamos en tam
+    printf("\nEl tam del archivo a codificar es de %lu bytes\n", tam);//se imprime el tamaño del archivo en bytes
 
     //una vez que tengamos el tamaño del archivo podemos pasar los datos del archivo a un arreglo de caracteres
     char *datos = (char *)malloc(sizeof(char) * tam); //establecemos el tamaño del archivo
@@ -75,7 +75,7 @@ int main(int argc, char const *argv[])
         i++; //incrementamos i en uno
     }
     //Para verificar que se impriman bien los caracteres
-    imprimirLista(l);
+    // imprimirLista(l);
 
     //ordenamos la lista y los arboles dentro de ella de menor a mayor frecuencia usando merge
     mergeSort(&l);
@@ -89,32 +89,41 @@ int main(int argc, char const *argv[])
     //se juntan los arboles de la lista en uno solo
     l = crearArbol(l);
 
-    printf("\nLista ordenada\n");
-    imprimirLista(l);
+    //Función para verificar que el arbol se haya unido correctamente
+    imprimirArbol(l->ar);
+
+    altura = alturaArbol(l->ar);
+
+    printf("\nLa altura el arbol es: %d", altura);
 
     
-    
-    int indice = 0;
+    // Comenzando la etapa de codificación
+    int indice = 0; // Inicializamos el índice para el arreglo de salida
+    arregloSalida = (unsigned char *)malloc(sizeof(unsigned char) * tam*altura); // Inicializamos el arreglo de salida que será el número de datos por el alto del árbol (para el peor caso) 
+    arregloBits = (unsigned char *)malloc(sizeof(unsigned char) * altura); // Inicializamos el arreglo de salida que será la altura del árbol (para el peor caso)
 
-    // Recorremos cada uno de los caracteres
+    // Recorremos cada uno de los caracteres a codificar
     for (i = 0; i < tam; i++)
     {
-        caracter = datos[i];
-        nivelFinal = 0;
+        caracter = datos[i]; // Almacenamos temporalmente cada caracter
+        nivelFinal = 0; // Inicializamos en cero el nivel final
 
-        codificar(l->ar, 0);
+        codificar(l->ar, 0); // Codificamos cada caracter sobre el arregloBits
 
+        // Pasamos todos los bits del arreglo temporal (arregloBits) a un arreglo que será almacenado en el archivo (arregloSalida)
         for (int j = indice; j < indice + nivelFinal; j++)
         {
-            arregloSalida[i] = arregloBits[i - j];
+            arregloSalida[j] = arregloBits[j-indice];
+            //printf("%d Arreglo bits: %u\n", (j-indice), arregloSalida[j])            
         }
-        indice = indice + nivelFinal;
+        indice = indice + nivelFinal; // Aumentamos el indice correspondiente a la cantidad de bits que se almacenaron en el arreglo de salida 
     }
-    printf("\nTamaño de arreglo final %d", indice);
 
+
+    printf("\nTamaño de arreglo final de bits: %d", indice);    
     for (i = 0; i < indice; i++)
     {
-        printf("\nArreglo bits: %c", arregloSalida[i]);
+        printf("\nArreglo salida de bits: %u", arregloSalida[i]);
     }
 
     printf("\n\n");
@@ -356,9 +365,14 @@ arbol *unirArboles(arbol *aMayor, arbol *aMenor)
     return nuevo; //Retornamos el nuevo arbol
 }
 
+/*
+    Función que codifica cada caracter para almacenar en arregloBits los bits correspondientes al camino sobre el árbol
+    Recibe el nodo del arbol y el nivel en que se encuentra sobre el mismo
+    Devuelve 1 si encontró en si mismo o alguna de sus nodos hijos el dato, devuelve 0 en caso contrario
+*/
 int codificar(arbol *nodo, int nivel)
 {
-
+    // Si el nodo actual no está vacío
     if (nodo != NULL)
     {   
         // En caso de que ya haya encontrado la hoja que contiene al caracter
@@ -371,16 +385,53 @@ int codificar(arbol *nodo, int nivel)
         if (codificar(nodo->der, nivel + 1))
         {
             arregloBits[nivel] = 1;
+            //printf("Arreglo bits: %u\n", arregloBits[nivel]);
             return 1;
         }
         // Recorremos el nodo izquierdo para buscarlos
         if (codificar(nodo->izq, nivel + 1))
         {   
             arregloBits[nivel] = 0;
+            //printf("Arreglo bits: %u\n", arregloBits[nivel]);
             return 1;
         }
     }
 
     // En caso de que sea NULL o no se haya encontrado
     return 0;
+}
+
+/*
+    Función auxiliar para imprimir el arbol
+    Recibe el arbol a imprimir
+    No devuelve nada
+*/
+void imprimirArbol(arbol *a){
+
+    //MIentras el nodo no sea NULL se imprime el valor
+    if(a != NULL){
+        imprimirArbol(a->izq); //imprimimos por la izquierda
+        printf("\n%d",a->frec);
+        imprimirArbol(a->der); //imprmimimos por la derecha
+    }
+
+
+}
+
+int alturaArbol(arbol *a){
+    //Si no hay elemntos la altura sera 0
+    if(!a){
+        return 0;
+    }
+    int alt = 0; //para almacenar la altura
+
+    //calculamos la altura de la derecha
+    int alturaDerecha = alturaArbol(a->der);
+    //calculamos la altura de la izquierda
+    int alturaIzquierda = alturaArbol(a->izq);
+
+    //la altura mayor se guardará como la altura del arbol
+    alt = alturaIzquierda > alturaDerecha ? alturaIzquierda+1 : alturaDerecha+1;
+
+    return alt; //Retornamos la altura
 }

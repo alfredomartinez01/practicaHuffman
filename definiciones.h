@@ -17,8 +17,8 @@ typedef struct lista
 } lista;
 
 /*DEFINICIPON DE VARIABLES*/
-char *arregloSalida; //variable para el arreglo de salida
-char *arregloBits;   //variable para el arreglo de bits
+unsigned char *arregloSalida; //variable para el arreglo de salida
+unsigned char *arregloBits;   //variable para el arreglo de bits
 char caracter;       //variable para cada caracter a codificar en el árbol
 int nivelFinal; //nivel final de cada caracter en el arbol
 
@@ -33,3 +33,5 @@ arbol *unirArboles(arbol *aMayor, arbol *aMenor);
 int codificar(arbol *nodo, int nivel);
 void imprimirLista(lista *l);
 void escribirArchivoFrecuencias(lista *l);
+void imprimirArbol(arbol *a);
+int alturaArbol(arbol *a);
