@@ -1,27 +1,35 @@
 #include <stdio.h>
 
 /*DEFINICIÓN DE LAS ESTRUCTURAS*/
-typedef struct arbol{
+typedef struct arbol
+{
     int etiqueta; //la etiqueta será 0 o 1
-    int frec; //frecuencia
-    char dato; //Dato
+    int frec;     //frecuencia
+    char dato;    //Dato
     struct arbol *izq;
     struct arbol *der;
-}arbol;
+} arbol;
 
-typedef struct lista{
+typedef struct lista
+{
     arbol *ar;
     struct lista *siguiente;
-}lista;
+} lista;
+
+/*DEFINICIPON DE VARIABLES*/
+char *arregloSalida; //variable para el arreglo de salida
+char *arregloBits;   //variable para el arreglo de bits
+char caracter;       //variable para cada caracter a codificar en el árbol
+int nivelFinal; //nivel final de cada caracter en el arbol
 
 /*DEFINICIÓN DE LAS FUNCIONES*/
 unsigned long detallesArchivo(FILE *cod);
 void agregarLista(lista **l, arbol *a);
 void mergeSort(lista **l);
 lista *mezcla(lista *a, lista *b);
-void sublistas(lista *l, lista **delante, lista**atras);
-lista* crearArbol(lista *l);
+void sublistas(lista *l, lista **delante, lista **atras);
+lista *crearArbol(lista *l);
 arbol *unirArboles(arbol *aMayor, arbol *aMenor);
-int codificar(arbol *nodo, int nivel, char *arregloBits, char elemento);
+int codificar(arbol *nodo, int nivel);
 void imprimirLista(lista *l);
 void escribirArchivoFrecuencias(lista *l);
