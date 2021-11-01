@@ -3,7 +3,6 @@
 /*DEFINICIÓN DE LAS ESTRUCTURAS*/
 typedef struct arbol
 {
-    int etiqueta; //la etiqueta será 0 o 1
     int frec;     //frecuencia
     char dato;    //Dato
     struct arbol *izq;
@@ -35,3 +34,4 @@ void imprimirLista(lista *l);
 void escribirArchivoFrecuencias(lista *l);
 void imprimirArbol(arbol *a);
 int alturaArbol(arbol *a);
+void guardarCodificacion(char *arregloSalida, char *archivo, int tam);

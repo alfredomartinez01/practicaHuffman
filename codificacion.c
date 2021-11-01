@@ -90,7 +90,7 @@ int main(int argc, char const *argv[])
     l = crearArbol(l);
 
     //Función para verificar que el arbol se haya unido correctamente
-    imprimirArbol(l->ar);
+    // imprimirArbol(l->ar);
 
     altura = alturaArbol(l->ar);
 
@@ -114,17 +114,20 @@ int main(int argc, char const *argv[])
         for (int j = indice; j < indice + nivelFinal; j++)
         {
             arregloSalida[j] = arregloBits[j-indice];
-            //printf("%d Arreglo bits: %u\n", (j-indice), arregloSalida[j])            
+            // printf("%d Arreglo bits: %u\n", (j-indice), arregloSalida[j]);  
         }
         indice = indice + nivelFinal; // Aumentamos el indice correspondiente a la cantidad de bits que se almacenaron en el arreglo de salida 
     }
 
 
     printf("\nTamaño de arreglo final de bits: %d", indice);    
-    for (i = 0; i < indice; i++)
-    {
-        printf("\nArreglo salida de bits: %u", arregloSalida[i]);
-    }
+    // for (i = 0; i < indice; i++)
+    // {
+    //     printf("\nArreglo salida de bits: %u", arregloSalida[i]);
+    // }
+
+    //Guardamos la codificacion obtenida enel archivo 
+    guardarCodificacion(arregloSalida,archivo, indice);
 
     printf("\n\n");
     return 0;
@@ -359,8 +362,6 @@ arbol *unirArboles(arbol *aMayor, arbol *aMenor)
     nuevo->frec = aMayor->frec + aMenor->frec; //Sumamos las frecuencias del arbol
     nuevo->izq = aMenor;                       //se le asigna a la izquierda el arbol con menor frecuencia
     nuevo->der = aMayor;                       //se le asigna a la derecha el arbol con mayor frecuencia
-    nuevo->izq->etiqueta = 0;                  //a la izquierda lo etiquetamos con un 0
-    nuevo->der->etiqueta = 1;                  //a la derecha lo etiquetamos con un 1
 
     return nuevo; //Retornamos el nuevo arbol
 }
@@ -385,7 +386,7 @@ int codificar(arbol *nodo, int nivel)
         if (codificar(nodo->der, nivel + 1))
         {
             arregloBits[nivel] = 1;
-            //printf("Arreglo bits: %u\n", arregloBits[nivel]);
+            // printf("Arreglo bits: %u\n", arregloBits[nivel]);
             return 1;
         }
         // Recorremos el nodo izquierdo para buscarlos
@@ -434,4 +435,28 @@ int alturaArbol(arbol *a){
     alt = alturaIzquierda > alturaDerecha ? alturaIzquierda+1 : alturaDerecha+1;
 
     return alt; //Retornamos la altura
+}
+
+/*
+    Función que guarda la codificacion en un archivo
+    Recibe el arreglo de caracteres codificados.
+    No retorna nada pues se crea un archivo 
+*/
+void guardarCodificacion(char *arregloSalida, char *archivo, int tam){
+
+    FILE *codificado = NULL; //variable para el archivo codificado
+
+    strcat(archivo,".dat");
+
+    codificado = fopen(archivo,"wb");
+    // int i = 0;
+    // for(i=0;i<tam;i++){
+    //     fprintf(codificado,"%c",arregloSalida[i]);
+
+    // }
+    fwrite(arregloSalida,sizeof(unsigned char), tam, codificado);
+
+    fclose(codificado);
+
+
 }
