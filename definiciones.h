@@ -3,7 +3,6 @@
 /*DEFINICIÓN DE LAS ESTRUCTURAS*/
 typedef struct arbol
 {
-    int etiqueta; //la etiqueta será 0 o 1
     int frec;     //frecuencia
     char dato;    //Dato
     struct arbol *izq;
