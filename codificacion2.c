@@ -6,7 +6,7 @@
 #include "definiciones.h"
 
 int nivelFinal; //nivel final de cada caracter en el arbol
-
+int altura = 0; //variable para la altura del arbol
 
 int main(int argc, char const *argv[])
 {
@@ -32,7 +32,7 @@ int main(int argc, char const *argv[])
 
     //obtenemos los detalles del archivo, en este caso el tamaño
     tam = detallesArchivo(cod); //lo almacenamos en tam
-    printf("\nEl tamaño del archivo a codificar es de %lu bytes\n", tam);//se imprime el tamaño del archivo en bytes
+    printf("\nEl tam del archivo a codificar es de %lu bytes\n", tam);//se imprime el tamaño del archivo en bytes
 
     //una vez que tengamos el tamaño del archivo podemos pasar los datos del archivo a un arreglo de caracteres
     char *datos = (char *)malloc(sizeof(char)*tam); //establecemos el tamaño del archivo
@@ -87,8 +87,12 @@ int main(int argc, char const *argv[])
     //se juntan los arboles de la lista en uno solo
     l = crearArbol(l);
 
-    printf("\nLista ordenada\n");
-    imprimirLista(l);
+    //Función para verificar que el arbol se haya unido correctamente
+    imprimirArbol(l->ar);
+
+    altura = alturaArbol(l->ar);
+
+    printf("\nLa altura el arbol es: %d", altura);
 
 
     // // codificar(l->ar, 0, arregloBits);
@@ -353,4 +357,38 @@ int codificar(arbol *nodo, int nivel, char *arregloBits, char elemento){
 
     return 0;
 
+}
+
+/*
+    FUnción auxiliar para imprimir el arbol
+    Recibe el arbol a imprimir
+*/
+void imprimirArbol(arbol *a){
+
+    //MIentras el nodo no sea NULL se imprime el valor
+    if(a != NULL){
+        imprimirArbol(a->izq); //imprimimos por la izquierda
+        printf("\n%d",a->frec);
+        imprimirArbol(a->der); //imprmimimos por la derecha
+    }
+
+
+}
+
+int alturaArbol(arbol *a){
+    //Si no hay elemntos la altura sera 0
+    if(!a){
+        return 0;
+    }
+    int alt = 0; //para almacenar la altura
+
+    //calculamos la altura de la derecha
+    int alturaDerecha = alturaArbol(a->der);
+    //calculamos la altura de la izquierda
+    int alturaIzquierda = alturaArbol(a->izq);
+
+    //la altura mayor se guardará como la altura del arbol
+    alt = alturaIzquierda > alturaDerecha ? alturaIzquierda+1 : alturaDerecha+1;
+
+    return alt; //Retornamos la altura
 }

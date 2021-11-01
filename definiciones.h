@@ -25,3 +25,5 @@ arbol *unirArboles(arbol *aMayor, arbol *aMenor);
 int codificar(arbol *nodo, int nivel, char *arregloBits, char elemento);
 void imprimirLista(lista *l);
 void escribirArchivoFrecuencias(lista *l);
+void imprimirArbol(arbol *a);
+int alturaArbol(arbol *a);
