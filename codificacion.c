@@ -7,7 +7,7 @@
 
 int main(int argc, char const *argv[])
 {
-    unsigned long tam; //vairbale que almacena el tamaño del archivo
+    unsigned long tam; //varibale que almacena el tamaño del archivo
     char archivo[50]; //variable que almacena el nombre del archivo a leer
     FILE *frecuencias = NULL, *cod = NULL; //Variables para los archivos
     int i = 0; //varibale para loops
