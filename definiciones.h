@@ -34,3 +34,4 @@ void imprimirLista(lista *l);
 void escribirArchivoFrecuencias(lista *l);
 void imprimirArbol(arbol *a);
 int alturaArbol(arbol *a);
+void guardarCodificacion(char *arregloSalida, char *archivo, int tam);
