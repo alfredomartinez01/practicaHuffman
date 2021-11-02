@@ -12,7 +12,7 @@ int main(int argc, char const *argv[])
 {
     unsigned long tam;                     //varibale que almacena el tamaño del archivo
     char archivo[50];                      //variable que almacena el nombre del archivo a leer
-    FILE *frecuencias = NULL, *cod = NULL; //Variables para los archivos
+    FILE *cod = NULL; //Variables para los archivos
     int i = 0;                             //varibale para loops
     lista *l = NULL;                       //variable para la lista
     bool encontrado;                       //variable que servirá para saber si un elemento se encuentra en el arbol
@@ -32,61 +32,44 @@ int main(int argc, char const *argv[])
         exit(1); //salimos del programa
     }
 
-    //obtenemos los detalles del archivo, en este caso el tamaño
+    // Obtenemos los detalles del archivo, en este caso el tamaño
     tam = detallesArchivo(cod);                                        //lo almacenamos en tam
     printf("\nEl tam del archivo a codificar es de %lu bytes\n", tam); //se imprime el tamaño del archivo en bytes
 
     //una vez que tengamos el tamaño del archivo podemos pasar los datos del archivo a un arreglo de caracteres
     char *datos = (char *)malloc(sizeof(char) * tam); //establecemos el tamaño del archivo
+
     //con ayuda de fread pasamos el contenido del archivo al arreglo anterior
     fread(datos, sizeof(char), tam, cod);
 
     // -------- CREAMOS LA LISTA DE FRECUENCIAS ----------
+    // Comenzamos creando el arreglo de frecuencias
+    int frecuencias[256] = {0}; //arreglo de 256 posiciones, donde cada posicion representa un caracter, inicializamos todos en 0
     while (i < tam)
     {
-        encontrado = false; //al inicio sera false (se uso stdbool.h)
-        lista *lAux = l;    //lista auxiliar para recorrerla
-        //Recorremos la lista
-        while (lAux != NULL)
-        {
-            //si el caracter de los datos ya esta en un arbol se incrementa su frecuencia
-            if (datos[i] == lAux->ar->dato)
-            {
-                lAux->ar->frec++;  //incrementamos la frecuencia del caracter
-                encontrado = true; //ponemos en true ya que se ha encontrado
+        frecuencias[(int)datos[i]]++; //sumamos uno a la posicion del caracter
+        i++;
+    }
 
-                // Recorremos el resto de la lista para acomodar en la posición que le corresponde respecto a su frecuencia
-                while (lAux->siguiente != NULL && lAux->ar->frec > lAux->siguiente->ar->frec)
-                {
-                    // Vamos intercambiando nodos
-                    arbol *aux;
-                    aux = lAux->ar;
-                    lAux->ar = lAux->siguiente->ar;
-                    lAux->siguiente->ar = aux;
-
-                    // Vamos a la siguiente posición
-                    lAux = lAux->siguiente;
-                }
-                break;
-            }
-
-            lAux = lAux->siguiente; //Avanzamos al siguiente nodo de la lista
-        }
-
-        //Si no esta el elemento lo agregamos al arbol y su frecuencia será de 0
-        if (!encontrado)
+    // Vamos agregando cada caracter a la lista de frecuencias (donde las frecuencias sean distinto de cero)
+    for (int k = 0; k < 256; k++)
+    {
+        if (frecuencias[k] != 0)
         {
             a = (arbol *)malloc(sizeof(arbol));
-            a->dato = datos[i]; //se iguala al caracter actual
-            a->frec = 1;        //frecuencia en 0
+            a->dato = k; //se iguala al caracter actual
+            a->frec = frecuencias[k];        //frecuencia que tiene el caracter
 
-            agregarLista(&l, a); //agregamos al inicio de la lista
+            agregarLista(&l, a); //agregamos al final de la lista
         }
-        i++; //incrementamos i en uno
     }
+
+    // Ordenamos ascendentemnete la lista respecto a sus frecuencias
+    mergeSort(&l);
+
     //Para verificar que se impriman bien y ordenados los caracteres
     imprimirLista(l);
-
+    
 
     // -------- ESCRIBIRMOS LA LISTA DE FRECUENCIAS EN EL ARCHIVO ----------
     escribirArchivoFrecuencias(l);
@@ -96,8 +79,7 @@ int main(int argc, char const *argv[])
     //se juntan los arboles de la lista en uno solo
     l = crearArbol(l);
 
-    //Función para verificar que el arbol se haya unido correctamente
-    // imprimirArbol(l->ar);
+    // Guardamos la altura del árbol para uso en variables
     altura = alturaArbol(l->ar);
     printf("\nLa altura el arbol es: %d\n", altura);
 
@@ -176,7 +158,7 @@ unsigned long detallesArchivo(FILE *cod)
 }
 
 /*
-    Función que agrega un elemento al inicio de la lista
+    Función que agrega un elemento al final de la lista
     Recibe la lista donde se insertará el elemento y el elemento a insertar
     en este caso el arbol con el dato y la frecuencia
     Retorna el nuevo elemento 
@@ -186,8 +168,8 @@ void agregarLista(lista **l, arbol *a)
     lista *nuevoArbol;                           //creamos una variable para alamacenar el dato
     nuevoArbol = (lista *)malloc(sizeof(lista)); //le asignamos espacio al dato
     nuevoArbol->ar = a;                          //guardamos el arbol en el nuevo nodo
-    nuevoArbol->siguiente = *l;                  //el siguiente nodo será igual a la lista que teniamos
-    (*l) = nuevoArbol;
+    nuevoArbol->siguiente = NULL;                  //el siguiente nodo será igual a la lista que teniamos
+    (*l)->siguiente = nuevoArbol;
 }
 
 /*
@@ -205,6 +187,94 @@ void imprimirLista(lista *l)
         // printf("\nFrecuencia %d ", l->ar.frec); //imprime la frecuencia del arbol actual
         l = l->siguiente; //avanzamos al siguiente nodo de la lista
     }
+}
+
+/*
+    La siguiente función es para ordenar nuestra lista, se uso mergeSort resultando en una complejidad O(nLogn)
+    Recibe la lista que será ordenada bajo este método
+    No regresa nada ya que se esta modificando directamente la lista
+*/
+void mergeSort(lista **l)
+{
+    lista *inicio = *l; //establecemos la cabeza de la lista
+    lista *a, *b;       //Establecemos los nodos
+
+    //Si la lista es nula o solo hay un arbol no ordenamos
+    if ((inicio == NULL) || (inicio->siguiente == NULL))
+        return; //salimos de la funcion
+
+    //Función para hacer sublistas de la lista
+    sublistas(inicio, &a, &b);
+
+    //Llamada recursiva a merge para las sublistas creadas
+    mergeSort(&a); //merge para la sublista a
+    mergeSort(&b); //merge para la sublista b
+
+    //Juntamos las dos sublistas ordenadas
+    *l = mezcla(a, b);
+}
+
+/*
+    Función que realiza el merge para tener la lista completamente ordenada
+    Recibe la sublista a y sublista b a mezclar
+    Regresa la lista mezclada
+*/
+lista *mezcla(lista *a, lista *b)
+{
+    lista *resultado = NULL; //variable que almacenara la lista completa
+
+    //Si a es nula regresamos la lista b solamente y viceversa, serán los casos base
+    if (a == NULL)
+        return b; //regresamos la sublista b
+    else if (b == NULL)
+        return a; //regresamos la sublista a
+
+    /*
+        Comparamos las frecuencias de los arboles dentro de las dos sublistas
+        Si la frecuencia del arbol de la sublista a es menor o igual que el del arbol de la sublista b
+        se le asigna a al resultado, posteriomente se avanza un nodo y se llama recursivamente 
+        a la función para hacer la misma comparación, pero con el siguiente nodo
+        Si la comparación no se cumple entonces el resultado se asigna a b y se repite lo anterior.
+    */
+    if (a->ar->frec <= b->ar->frec)
+    {
+        resultado = a;
+        resultado->siguiente = mezcla(a->siguiente, b); //Llamada recursiva a a la mezcla
+    }
+    else
+    {
+        resultado = b;
+        resultado->siguiente = mezcla(a, b->siguiente); //llamada recursiva a la mezcla
+    }
+
+    return resultado; //retornmaos el resultaado
+}
+
+/*A
+    Esta función parte la lista en dos sublistas para comenzar el ordenamiento
+    Recibe la lista a partir, la sublista que sera la aprte de atras y la que sera la parte de adelante
+    No retorna nada, pues se modifican los nodos por referencia.
+*/
+void sublistas(lista *l, lista **delante, lista **atras)
+{
+    lista *avanzaDosNodos = l->siguiente; //variable con la que avanzaremos dos nodos de la lista
+    lista *avanzaUnNodo = l;              //variable para avanzar un nodo de la lista
+
+    //Mientras se pueda avanzar en la lista avanzamos dos nodos
+    while (avanzaDosNodos != NULL)
+    {
+        avanzaDosNodos = avanzaDosNodos->siguiente; //avnazamos dos nodos de la lista
+        if (avanzaDosNodos != NULL)
+        {                                               //SI aun no llega al final procedemos a avanzar un nodo
+            avanzaUnNodo = avanzaUnNodo->siguiente;     //avanzamos un nodo
+            avanzaDosNodos = avanzaDosNodos->siguiente; //Seguimos avanzando dos nodos
+        }
+    }
+
+    *delante = l; //almacenamos la parte de adelante
+                  //la parte de atras se asigna a avanzaUnNodo ya que esta queda antes de la mitad de la lista
+    *atras = avanzaUnNodo->siguiente;
+    avanzaUnNodo->siguiente = NULL; //el siguiente nodo en NULL
 }
 
 /*
