@@ -129,7 +129,7 @@ int main(int argc, char const *argv[])
             }
 
             //Hacemos la compresion haciendo corrimientos ayudandonos de la variable bit
-            //Así llevamos la cuenta de los bits procesados, cuando se procesan los 8 bits escribimos en el archivo
+            //Así llevamos la cuenta de los bits procesados para ir encendiendo cada uno de los bytes del archivo (acomodamos y encendemos), cuando se procesan los 8 bits escribimos en el archivo
             auxCara = auxCara | (arregloBitsTemp[j - indice] << bit);
 
             // printf("auxCara: %c\n", auxCara);
