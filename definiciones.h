@@ -4,8 +4,8 @@
 /*DEFINICIÓN DE LAS ESTRUCTURAS*/
 typedef struct arbol
 {
-    int frec;     //frecuencia
-    char dato;    //Dato
+    unsigned long frec;     //frecuencia
+    unsigned char dato;    //Dato
     struct arbol *izq;
     struct arbol *der;
 } arbol;

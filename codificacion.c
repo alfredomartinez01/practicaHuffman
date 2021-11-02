@@ -36,16 +36,16 @@ int main(int argc, char const *argv[])
     printf("\nEl tam del archivo a codificar es de %lu bytes\n", tam); //se imprime el tamaño del archivo en bytes
 
     //una vez que tengamos el tamaño del archivo podemos pasar los datos del archivo a un arreglo de caracteres
-    char *datos = (char *)malloc(sizeof(char) * tam); //establecemos el tamaño del archivo
+    unsigned char *datos = (char *)malloc(sizeof(char) * tam); //establecemos el tamaño del archivo
     //con ayuda de fread pasamos el contenido del archivo al arreglo anterior
-    fread(datos, sizeof(char), tam, cod);
+    fread(datos, sizeof(unsigned char), tam, cod);
 
     // -------- CREAMOS LA LISTA DE FRECUENCIAS ----------
     // Comenzamos creando el arreglo de frecuencias
-    int frecuencias[256] = {0}; //arreglo de 256 posiciones, donde cada posicion representa un caracter, inicializamos todos en 0
+    unsigned long frecuencias[256] = {0}; //arreglo de 256 posiciones, donde cada posicion representa un caracter, inicializamos todos en 0
     while (i < tam)
     {
-        frecuencias[(int)datos[i]]++; //sumamos uno a la posicion del caracter
+        frecuencias[datos[i]]++; //sumamos uno a la posicion del caracter
         i++;
     }
 
@@ -61,6 +61,8 @@ int main(int argc, char const *argv[])
             agregarLista(&l, a); //agregamos al final de la lista
         }
     }
+
+    
     //Para verificar que se impriman bien y ordenados los caracteres
     mergeSort(&l);
     imprimirLista(l);
@@ -178,7 +180,7 @@ void imprimirLista(lista *l)
     //Mientras la lista no sea NULL ingresa al while
     while (l != NULL)
     {
-        printf("\n%c\t%d", l->ar->dato, l->ar->frec); //imprime el dato del arbol actual
+        printf("\n%u\t%ld", l->ar->dato, l->ar->frec); //imprime el dato del arbol actual
         // printf("\nFrecuencia %d ", l->ar.frec); //imprime la frecuencia del arbol actual
         l = l->siguiente; //avanzamos al siguiente nodo de la lista
     }
@@ -282,13 +284,16 @@ void escribirArchivoFrecuencias(lista *l)
 {
     FILE *frecuencias; //variable para el archivo
 
-    frecuencias = fopen("frecuencias.txt", "wt"); //se abre o crea el archivo en modo escritura
+    frecuencias = fopen("frecuencias.txt", "wb"); //se abre o crea el archivo en modo escritura
 
     //Recorremos la lista para impriomir en el archivo
     while (l != NULL)
     {
         //colocamos el caracter junto con su frecuencia
-        fprintf(frecuencias, "%c%d", l->ar->dato, l->ar->frec);
+        unsigned char auxDato = l->ar->dato;
+        unsigned long auxFrec = l->ar->frec;
+        fwrite(&auxDato, sizeof(unsigned char), 1, frecuencias);
+        fwrite(&auxFrec, sizeof(unsigned long), 1, frecuencias);
         l = l->siguiente; //avanzamos al siguiente nodo
     }
 
@@ -408,7 +413,7 @@ void imprimirArbol(arbol *a)
     if (a != NULL)
     {
         imprimirArbol(a->izq); //imprimimos por la izquierda
-        printf("\n%d", a->frec);
+        printf("\n%ld", a->frec);
         imprimirArbol(a->der); //imprmimimos por la derecha
     }
 }
