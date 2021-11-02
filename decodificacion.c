@@ -17,7 +17,7 @@ int main(int argc, char const *argv[])
     unsigned char caracter = 0; //almacena cada caracter leído
     //int frecuencias = 0; //frecuencia de cada uno de los caracteres del archivo
     int caracteresTotales = 0;                          // acumula el total de caracteres diferentes del archivo original
-    unsigned long frecuenciasTotal = 0;                 //acumula el total de las frecuencias de los caracteres
+    
     char *nombreArchivoFrecuencias = "frecuencias.txt"; //almacena el nombre del archivo
     char nombreArchivoCodificado[40];                   //almacena el nombre del archivo codificado
     FILE *tablaFrecuencias = NULL;                      //variable para el archivo de frecuencas
@@ -98,15 +98,15 @@ int main(int argc, char const *argv[])
     printf("\nEl tam del archivo a decodificar es de %lu bytes\n", tam); //se imprime el tamaño del archivo en bytes
 
     // -------- DECODIFICACIÓN ----------
-
     //Establecemos el arreglo que guardara los bytes del archivo codificado
     unsigned char *datosCod = (char *)malloc(sizeof(char) * tam);
     //con ayuda de fread pasamos el contenido del archivo al arreglo anterior
     fread(datosCod, sizeof(unsigned char), tam, decodificar);
 
-    unsigned char *arregloEntrada;                                            //arreglo de todos los bits de entrada
-    arregloEntrada = (unsigned char *)malloc(sizeof(unsigned char)*tam * altura); // Inicializamos el arreglo temporal que guardará los bits que será la altura del árbol (para el peor caso)
-    i = 0;                                                                    //variable para loop
+    // Imprimimos todos los bits que se encuentran dentro de datosCod
+    unsigned char *arregloEntrada;                                                  //arreglo de todos los bits de entrada
+    arregloEntrada = (unsigned char *)malloc(sizeof(unsigned char) * tam * altura); // Inicializamos el arreglo temporal que guardará los bits que será la altura del árbol (para el peor caso)
+    i = 0;                                                                          //variable para loop
 
     //Quitamos la extensión .bit para volver a generar el archivo original
     nombreArchivoCodificado[strlen(nombreArchivoCodificado) - 4] = 0;
@@ -129,34 +129,36 @@ int main(int argc, char const *argv[])
 void decodificarArchivo(unsigned char *datos, int tam, arbol *a, char *nombre)
 {
     FILE *decodificado = NULL;
-    long i = 0; //variable para recorrer los bits que tiene el caracter y saber si nos vamos a la izquierda
+    long i = 0; //variable para recorrer todos los bytes del archivo decodificado
+    int bytesEscritos = 0;
 
-    //(bit de caracter es 0) o nos vamos a la derecha (bit de caracter es  1)
-    int bit = 7;
-    int bitCaracter; //almacena si el bit es 1 o 0 para ir recorriendo el arbol
-    int auxBit;      //variable auxiliar que guarda el corrimiento
+    int bit = 7;     // Para ir recorriendo los bits de cada byte
+    unsigned char bitCaracter; //almacena si el bit es 1 o 0 para ir recorriendo el arbol
+
+    // Abrimos el archivo para escribir los bytes
     decodificado = fopen(nombre, "wb");
+
     bool encontrado; //variable para saber cuando encontramos un dato
+
     //arbol donde almacenamos la raiz para regresar
     arbol *raiz = a;
-    // int auxFrec = 0;
 
     /*
         Este while realizará la decodificación, se itera las veces del tamaño del archivo codificado
     */
-    while (i < tam)
+    while (i <= tam)
     {
-        for (bit = 7; bit >= 0; bit--)
+        // recorremos cada bit de cada byte
+        bit = 7;
+        while(bit >= 0 && bytesEscritos < frecuenciasTotal)
         {
-
+            
             //hacemos un corrimiento a la derecha para ir viendo cada bit del caracter y saber
             //por donde bajar en el arbol
-            auxBit = datos[i] >> bit;
-            //Con la operación and y 1 podemos saber si el bit es 0 o 1: 1 & 1 = 1; 0 & 1 = 0
-            bitCaracter = auxBit & 1;
-
-            //Si el caracter resulta ser 1, nos vamos hacia la derecha en el arbol
-            // printf("\nEl bit: %d\n", bitCaracter);
+            //Con la operación and y 1 podemos saber si el bit es 0 o 1:
+            //                                                              1 & 1 = 1; 0 & 1 = 0
+            bitCaracter = (datos[i] & (1 << bit)) >> bit;
+            //printf("Bit: %d, %d\n", bitCaracter, bit);
 
             if (bitCaracter == 1)
                 a = a->der;
@@ -164,15 +166,21 @@ void decodificarArchivo(unsigned char *datos, int tam, arbol *a, char *nombre)
                 a = a->izq;
 
             //Si encontramos el elemento lo escribimos en el archivo decodificado
-            if ((int)(a->dato))
+            if (a->der == NULL && a->izq == NULL)
             {
-                fprintf(decodificado, "%u", a->dato); //escribimos el caracter en el archivo
-                a = raiz;                             //Reiniciamos el arbol a la raíz para comenzar con otro caracter
+                //printf("Escritos: %d\n", bytesEscritos);
+                unsigned char dato = a->dato;
+                fwrite(&dato, sizeof(unsigned char), 1, decodificado);
+                a = raiz;                                               //Reiniciamos el arbol a la raíz para comenzar con otro caracter
+                bytesEscritos++; 
+                printf("Se escribieron %d bits del original y %ld del comprimido\n", bytesEscritos, i);                  
             }
+            bit--;
         }
         i++; //aumentamos i
+        
     }
-
+    
     fclose(decodificado); //Cerramos el archivo
 }
 
