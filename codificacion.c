@@ -6,7 +6,6 @@
 #include <sys/stat.h> //para saber detalles de archivos
 #include "definiciones.h"
 
-int altura = 0; //variable para la altura del arbol
 
 int main(int argc, char const *argv[])
 {
