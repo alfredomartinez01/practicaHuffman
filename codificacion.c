@@ -6,7 +6,6 @@
 #include <sys/stat.h> //para saber detalles de archivos
 #include "definiciones.h"
 
-int altura = 0; //variable para la altura del arbol
 
 int main(int argc, char const *argv[])
 {
@@ -32,13 +31,12 @@ int main(int argc, char const *argv[])
         exit(1); //salimos del programa
     }
 
-    // Obtenemos los detalles del archivo, en este caso el tamaño
+    //obtenemos los detalles del archivo, en este caso el tamaño
     tam = detallesArchivo(cod);                                        //lo almacenamos en tam
     printf("\nEl tam del archivo a codificar es de %lu bytes\n", tam); //se imprime el tamaño del archivo en bytes
 
     //una vez que tengamos el tamaño del archivo podemos pasar los datos del archivo a un arreglo de caracteres
     char *datos = (char *)malloc(sizeof(char) * tam); //establecemos el tamaño del archivo
-
     //con ayuda de fread pasamos el contenido del archivo al arreglo anterior
     fread(datos, sizeof(char), tam, cod);
 
@@ -63,13 +61,10 @@ int main(int argc, char const *argv[])
             agregarLista(&l, a); //agregamos al final de la lista
         }
     }
-
-    // Ordenamos ascendentemnete la lista respecto a sus frecuencias
-    mergeSort(&l);
-
     //Para verificar que se impriman bien y ordenados los caracteres
+    mergeSort(&l);
     imprimirLista(l);
-    
+
 
     // -------- ESCRIBIRMOS LA LISTA DE FRECUENCIAS EN EL ARCHIVO ----------
     escribirArchivoFrecuencias(l);
@@ -79,7 +74,8 @@ int main(int argc, char const *argv[])
     //se juntan los arboles de la lista en uno solo
     l = crearArbol(l);
 
-    // Guardamos la altura del árbol para uso en variables
+    //Función para verificar que el arbol se haya unido correctamente
+    // imprimirArbol(l->ar);
     altura = alturaArbol(l->ar);
     printf("\nLa altura el arbol es: %d\n", altura);
 
@@ -140,7 +136,6 @@ int main(int argc, char const *argv[])
     Se hizo uso de la libreria sys/stat.h.
     REcibe el archivo del que deseamos saber su tamaño
     Retorna el tamaño del archivo
-
 */
 unsigned long detallesArchivo(FILE *cod)
 {
@@ -158,7 +153,7 @@ unsigned long detallesArchivo(FILE *cod)
 }
 
 /*
-    Función que agrega un elemento al final de la lista
+    Función que agrega un elemento al inicio de la lista
     Recibe la lista donde se insertará el elemento y el elemento a insertar
     en este caso el arbol con el dato y la frecuencia
     Retorna el nuevo elemento 
@@ -168,8 +163,8 @@ void agregarLista(lista **l, arbol *a)
     lista *nuevoArbol;                           //creamos una variable para alamacenar el dato
     nuevoArbol = (lista *)malloc(sizeof(lista)); //le asignamos espacio al dato
     nuevoArbol->ar = a;                          //guardamos el arbol en el nuevo nodo
-    nuevoArbol->siguiente = NULL;                  //el siguiente nodo será igual a la lista que teniamos
-    (*l)->siguiente = nuevoArbol;
+    nuevoArbol->siguiente = *l;                  //el siguiente nodo será igual a la lista que teniamos
+    (*l) = nuevoArbol;
 }
 
 /*
@@ -276,6 +271,7 @@ void sublistas(lista *l, lista **delante, lista **atras)
     *atras = avanzaUnNodo->siguiente;
     avanzaUnNodo->siguiente = NULL; //el siguiente nodo en NULL
 }
+
 
 /*
     Función que escribe el archivo de frecuencias con los elementros dentro de la lista

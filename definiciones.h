@@ -16,12 +16,13 @@ typedef struct lista
     struct lista *siguiente;
 } lista;
 
-/*DEFINICIPON DE VARIABLES*/
+/*DEFINICIPON DE VARIABLES GLOBALESs*/
 unsigned char *arregloBitsTemp;   //variable para el arreglo de bits
 char bits[256];   //variable para el arreglo de bits
 char salida[256];   //variable para el arreglo de bits
 char caracter;       //variable para cada caracter a codificar en el árbol
 int nivelFinal; //nivel final de cada caracter en el arbol
+int altura = 0; //variable para la altura del arbol
 
 /*DEFINICIÓN DE LAS FUNCIONES*/
 unsigned long detallesArchivo(FILE *cod);
