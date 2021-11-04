@@ -6,6 +6,8 @@
 #include <sys/stat.h> //para saber detalles de archivos
 #include "definiciones.h"
 
+#include <unistd.h>
+
 int main(int argc, char const *argv[])
 {
     unsigned long tam; //varibale que almacena el tamaño del archivo
@@ -16,7 +18,7 @@ int main(int argc, char const *argv[])
     bool encontrado;   //variable que servirá para saber si un elemento se encuentra en el arbol
     arbol *a;          //variable para el arbol
     int bit = 7;       //para hacer el corrimiento de bits
-    char auxCara = 0;  //Auxiliar que nos servirá para almacenar los caracteres codificados
+    unsigned char auxCara = 0;  //Auxiliar que nos servirá para almacenar los caracteres codificados
 
     // -------- COMENZAMOS CON LA LECTURA DEL ARCHIVO ----------
     printf("\nArchivo a codificar: ");
@@ -44,6 +46,7 @@ int main(int argc, char const *argv[])
     unsigned long frecuencias[256] = {0}; //arreglo de 256 posiciones, donde cada posicion representa un caracter, inicializamos todos en 0
     while (i < tam)
     {
+        //printf("%u\n", datos[i]); //imprimimos el caracter
         frecuencias[datos[i]]++; //sumamos uno a la posicion del caracter
         i++;
     }
@@ -89,14 +92,16 @@ int main(int argc, char const *argv[])
         // Comprobamos que el nivel del dato sea mayor a cero
         if (nivelHojas[i] != 0)
         {
-            printf("\nCaracter: %c\n", i);
+            printf("\nCaracter: %u\n", i);
             for (int j = 0; j < nivelHojas[i]; j++)
             {
                 printf("%u", codigosHojas[i][j]);
             }
+
         }
     }
-
+       
+                printf("\n");   
     // -------- CODIFICAMOS LOS ELEMENTOS DEL ARCHIVO RESPECTO A EL ARREGLO DE CÓDIGOS ----------
     int indice = 0;                                                                  // Indice acumulador para detectar la cantidad de bits que se van codificando
     FILE *codificado = NULL;           //variable para el archivo codificado
@@ -115,27 +120,32 @@ int main(int argc, char const *argv[])
             // Si ya se hicieron todos los corrimientos (se completó el byte)
             if (bit < 0)
             {
+                //printf("%u\n", auxCara);
                 bit = 7;                            //comenzamos de nuevo los bits para los corrimientos
-                fprintf(codificado, "%c", auxCara); //imprimimos el caracter codificado en el archivo final
-                auxCara = 0;                        //lo volvemos a empezar para el nuevo caracter
+                fwrite(&auxCara, sizeof(char), 1, codificado); //imprimimos el caracter codificado en el archivo final
+                auxCara = 0;      
+                //printf("\n");             //lo volvemos a empezar para el nuevo caracter
             }
 
             //Hacemos la compresion haciendo corrimientos ayudandonos de la variable bit
             //Así llevamos la cuenta de los bits procesados para ir encendiendo cada uno de los bytes del archivo (acomodamos y encendemos), cuando se procesan los 8 bits escribimos en el archivo
             auxCara = auxCara | (codigosHojas[caracter][j] << bit);
 
+            //printf("%u", codigosHojas[caracter][j]);
             // printf("auxCara: %c\n", auxCara);
 
             bit--; //vamos retrocediendo el bit para el corrimiento
         }
-
+        //printf("\n");
         indice = (indice + nivelHojas[caracter]); // Aumentamos el indice correspondiente a la cantidad de bits que se escribieron en el archivo
     }
 
     // En caso de que hayan quedado un byte incompleto, lo escribimos en el archivo
     if (bit >= 0)
     {
-        fprintf(codificado, "%c", auxCara); //imprimimos el caracter codificado en el archivo final
+        //printf("%u\n", auxCara);
+        fwrite(&auxCara, sizeof(char), 1, codificado); //imprimimos el caracter codificado en el archivo final
+        //printf("\n");    
     }
 
     fclose(codificado);
