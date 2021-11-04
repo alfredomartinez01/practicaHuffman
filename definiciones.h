@@ -29,6 +29,7 @@ unsigned long frecuenciasTotal = 0;             //acumula el total de las frecue
 /*Funciones para el manejo de archivo original y de frecuencias*/
 unsigned long detallesArchivo(FILE *cod);
 void escribirArchivoFrecuencias(lista *l);
+void decodificarArchivo(unsigned char *datos, unsigned long tam, arbol *raiz, char *nombre);
 
 /*Funciones para el manejo de la lista*/
 void agregarLista(lista **l, arbol *a);
