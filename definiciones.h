@@ -1,15 +1,14 @@
-#include <stdio.h>
-#include <stdbool.h>  //para datos booleanos
-
 /*DEFINICIÓN DE LAS ESTRUCTURAS*/
+/*Estructura de árgol que contendrá cada nodo de los mismos*/
 typedef struct arbol
 {
-    unsigned long frec;     //frecuencia
-    unsigned char dato;    //Dato
-    struct arbol *izq;
-    struct arbol *der;
+    unsigned long frec;     //frecuencia de aparición sobre el archivo
+    unsigned char dato;     //byte en específico sobre el archivo
+    struct arbol *izq;      //puntero al hijo izquierdo
+    struct arbol *der;      //puntero al hijo derecho 
 } arbol;
 
+/*Estructura de lista que contendrá los nodos de árboles (raíces) para su posterior creación del árbol final*/
 typedef struct lista
 {
     arbol *ar;
@@ -17,27 +16,30 @@ typedef struct lista
 } lista;
 
 /*DEFINICIPON DE VARIABLES GLOBALESs*/
-unsigned char *arregloBitsTemp;   //variable para el arreglo de bits
-char bits[256];   //variable para el arreglo de bits
-char salida[256];   //variable para el arreglo de bits
-unsigned char caracter;       //variable para cada caracter a codificar en el árbol
-int nivelFinal; //nivel final de cada caracter en el arbol
-int altura = 0; //variable para la altura del arbol
-unsigned char codigosHojas[256][256] = {0}; //variable para el código de cada caracter
-char nivelHojas[256] = {0};
-unsigned long frecuenciasTotal = 0;                 //acumula el total de las frecuencias de los caracteres
+char archivo[50];  //variable que almacena el nombre del archivo a leer
+unsigned char *arregloBitsTemp;                 //variable para guardar los códios de bits de cada byte del archivo (temporalmente)
+unsigned char caracter;                         //variable para cada caracter (byte) a codificar en el árbol
+int altura = 0;                                 //variable para la altura del arbol
+unsigned char codigosHojas[256][256] = {0};     //variable para el código de cada caracter
+char nivelHojas[256] = {0};                     //variable para la longitud del código de cada caracter
+unsigned long frecuenciasTotal = 0;             //acumula el total de las frecuencias de los caracteres (bytes)
+
+
 /*DEFINICIÓN DE LAS FUNCIONES*/
+/*Funciones para el manejo de archivo original y de frecuencias*/
 unsigned long detallesArchivo(FILE *cod);
+void escribirArchivoFrecuencias(lista *l);
+
+/*Funciones para el manejo de la lista*/
 void agregarLista(lista **l, arbol *a);
 void mergeSort(lista **l);
+void imprimirLista(lista *l);
+
+/*Funciones para el manejo del árbol*/
 lista *mezcla(lista *a, lista *b);
 void sublistas(lista *l, lista **delante, lista **atras);
 lista *crearArbol(lista *l);
 arbol *unirArboles(arbol *aMayor, arbol *aMenor);
-int codificar(arbol *nodo, int nivel);
-void imprimirLista(lista *l);
-void escribirArchivoFrecuencias(lista *l);
 void imprimirArbol(arbol *a);
 int alturaArbol(arbol *a);
-
 int codificarHojas(arbol *nodo, int nivel, unsigned char *arregloBitsTemp);

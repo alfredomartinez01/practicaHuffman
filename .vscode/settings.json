@@ -1,0 +1,7 @@
+{
+    "files.associations": {
+        "*.html": "html",
+        "*.c": "c",
+        "limits": "cpp"
+    }
+}
