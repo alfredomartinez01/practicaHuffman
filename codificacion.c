@@ -58,15 +58,16 @@ int main(int argc, char const *argv[])
     unsigned char *datos = (char *)malloc(sizeof(char) * tam); //establecemos el tamaño del archivo
     fread(datos, sizeof(unsigned char), tam, archivoOriginal); // Leemos el contenido del archivo
 
+
     // ----------------------------- CREAMOS LA LISTA DE FRECUENCIAS -----------------------------
-    unsigned long frecuencias[256] = {0}; //arreglo de 256 posiciones, donde cada posicion representa un caracter, inicializamos todos en 0
+    unsigned long frecuencias[256] = {0}; //arreglo de 256 posiciones, cada posicion representa un caracter
     while (i < tam)
     {
         frecuencias[datos[i]]++; //sumamos uno a la frecuencia en la posicion del caracter
         i++;
     }
 
-    // Vamos agregando cada caracter a la lista de frecuencias (donde las frecuencias sean distinto de cero)
+    // Vamos agregando cada caracter a la lista de frecuencias (las frecuencias deben ser distinto de cero)
     for (int k = 0; k < 256; k++)
     {
         if (frecuencias[k] != 0)
@@ -78,21 +79,23 @@ int main(int argc, char const *argv[])
             agregarLista(&l, a); //agregamos al principio de la lista
         }
     }
-    // Odenamos la lista de bytes ascendentemente respecto a sus frecuencias
+    // Ordenamos la lista de bytes ascendentemente respecto a sus frecuencias
     mergeSort(&l);
+
 
     // -------------------- ESCRIBIMOS LOS BYTES Y LAS FRECUENCIAS SU ARCHIVO ----------------------
     escribirArchivoFrecuencias(l);
-
 
 
     // ------------------------- CREAMOS EL ÁRBOL Y OBETENEMOS LA ALTURA----------------------------
     l = crearArbol(l);           //se juntan los arboles de la lista en uno solo
     altura = alturaArbol(l->ar); //obtenemos la altura del arbol
 
+
     // ------------ CODIFICAMOS CADA CARACTER Y LO GUARDAMOS CADA CÓDIGO EN UN ARREGLO -------------
-    arregloBitsTemp = (unsigned char *)malloc(sizeof(unsigned char) * (altura + 1)); // Inicializamos el arreglo temporal que guardará los códigos
-    codificarHojas(l->ar, 0, arregloBitsTemp);                                       // Mandamos a almacenar todos los códidos de las hojas
+    // Inicializamos el arreglo temporal que guardará los códigos
+    arregloBitsTemp = (unsigned char *)malloc(sizeof(unsigned char) * (altura + 1)); 
+    codificarHojas(l->ar, 0, arregloBitsTemp); // Mandamos a almacenar todos los códidos de las hojas
 
 
     // -------- CODIFICAMOS LOS ELEMENTOS DEL ARCHIVO RESPECTO A EL ARREGLO DE CÓDIGOS ----------
@@ -102,28 +105,31 @@ int main(int argc, char const *argv[])
     strcat(archivo, ".dat");           //concatenamos .dat para la salida del archivo
     codificado = fopen(archivo, "wb"); // Abrimos el archivo para escritura binaria
 
-    // Recorremos cada uno de los caracteres a codificar y una vez codificados lo escribirmos en el archivo
+    // Recorremos cada caracter a codificar y una vez codificados lo escribirmos en el archivo
     for (i = 0; i < tam; i++)
     {
         caracter = datos[i]; // Almacenamos temporalmente cada caracter
 
-        // Pasamos todos los bits del arreglo de codigos (por caracter) al archivo, verificando cuando se complete cada byte
+        // Escribimos los bits del arreglo de codigos (por caracter), verificando cuando se complete cada byte
         for (int j = 0; j < nivelHojas[caracter]; j++)
         {   // Si ya se hicieron todos los corrimientos (se completó el byte)
             if (bit < 0)
             {
-                bit = 7;                                       //comenzamos de nuevo los bits para los corrimientos
-                fwrite(&auxCara, sizeof(char), 1, codificado); //escribimos el caracter codificado en el archivo final
-                auxCara = 0;                                   //Volvemos a poner en cero los bits para el nuevo byte
+                bit = 7;                                       //Reiniciamos los corrimientos
+                fwrite(&auxCara, sizeof(char), 1, codificado); //escribimos el caracter codificado en el arch.
+                auxCara = 0;                                   //Ponemos en cero los bits para el nuevo byte
             }
 
-            //Hacemos la compresion haciendo corrimientos ayudandonos de la variable bit
-            //Así llevamos la cuenta de los bits procesados para ir encendiendo cada uno de los bytes del archivo (acomodamos y encendemos), cuando se procesan los 8 bits escribimos en el archivo
+            /*  Hacemos la compresion haciendo corrimientos ayudandonos de la variable bit
+                Así llevamos la cuenta de los bits procesados para ir encendiendo cada uno de los bytes del 
+                archivo (acomodamos y encendemos), cuando se procesan los 8 bits escribimos en el archivo
+            */
             auxCara = auxCara | (codigosHojas[caracter][j] << bit);
 
             bit--; //vamos reduciendo la cantidad de bits que faltan por procesar
         }
-        indice = (indice + nivelHojas[caracter]); // Aumentamos el indice correspondiente a la cantidad de bits que se escribieron en el archivo
+        indice = (indice + nivelHojas[caracter]); // Aumentamos el indice correspondiente a la cantidad de 
+        // bits que se escribieron en el archivo
     }
 
     // En caso de que hayan quedado un byte incompleto, lo escribimos en el archivo
@@ -176,7 +182,7 @@ void agregarLista(lista * *l, arbol * a)
 }
 
 /*
-    La siguiente función es para ordenar nuestra lista, se uso mergeSort resultando en una complejidad O(nLogn)
+    La siguiente función es para ordenar nuestra lista, se uso mergeSort teniendo una complejidad O(nLogn)
     Recibe la lista que será ordenada bajo este método
     No regresa nada ya que se esta modificando directamente la lista
 */
@@ -251,14 +257,14 @@ void sublistas(lista * l, lista * *delante, lista * *atras)
     {
         avanzaDosNodos = avanzaDosNodos->siguiente; //avnazamos dos nodos de la lista
         if (avanzaDosNodos != NULL)
-        {                                               //SI aun no llega al final procedemos a avanzar un nodo
+        {                                               //SI aun no llega al final, avanzamos un nodo
             avanzaUnNodo = avanzaUnNodo->siguiente;     //avanzamos un nodo
             avanzaDosNodos = avanzaDosNodos->siguiente; //Seguimos avanzando dos nodos
         }
     }
 
     *delante = l; //almacenamos la parte de adelante
-                    //la parte de atras se asigna a avanzaUnNodo ya que esta queda antes de la mitad de la lista
+                //la parte de atras se asigna a avanzaUnNodo, porque queda antes de la mitad de la lista
     *atras = avanzaUnNodo->siguiente;
     avanzaUnNodo->siguiente = NULL; //el siguiente nodo en NULL
 }
@@ -299,7 +305,7 @@ lista *crearArbol(lista * l)
     //vamos recorriendo  la lista mientras el siguiente nodo no sea nulo
     while (l->siguiente != NULL)
     {
-        //Establecemos dos listas, una donde se ira almacenando el arbol unido y otra que servira como auxiliar
+        //Establecemos dos listas, una ira almacenando el arbol unido y otra que servira como auxiliar
         lista *arbolUnido = l;
         lista *aux = l;
         //Como iremos comparando de dos en dos los arboles, recorremos la lista en dos elementos
@@ -331,7 +337,7 @@ lista *crearArbol(lista * l)
             {
                 aux = aux->siguiente; //avanzamos en el auxiliar
             }
-            arbolUnido->siguiente = aux->siguiente; //se le asigna la posicion donde se guardara el nuevo arbol
+            arbolUnido->siguiente = aux->siguiente; //asigna la posicion donde se guardara el nuevo arbol
             aux->siguiente = arbolUnido;            //almacenamos el nuevo arbol en la posicion
         }
     }
@@ -350,15 +356,16 @@ arbol *unirArboles(arbol * aMayor, arbol * aMenor)
     arbol *nuevo = (arbol *)malloc(sizeof(arbol)); //Creamos el nuevo arbol
 
     nuevo->frec = aMayor->frec + aMenor->frec; //Sumamos las frecuencias del arbol
-    nuevo->izq = aMenor;                       //se le asigna a la izquierda el arbol con menor frecuencia
-    nuevo->der = aMayor;                       //se le asigna a la derecha el arbol con mayor frecuencia
+    nuevo->izq = aMenor;                       //asigna a la izquierda el arbol con menor frecuencia
+    nuevo->der = aMayor;                       //asigna a la derecha el arbol con mayor frecuencia
 
     return nuevo; //Retornamos el nuevo arbol
 }
 
 /*
     Función que obtiene los códigos y nivele de cada nodo hoja que contienen los caracteres
-    Recibe el arbol y el nivel en el que se encuentra además de un arreglo auxuliar para almacenar los códigos
+    Recibe el arbol y el nivel en el que se encuentra además de un arreglo auxuliar para almacenar 
+    los códigos
     No devuelve nada, solo int para deterner ejecución
 */
 
