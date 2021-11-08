@@ -24,6 +24,7 @@
 #include <sys/stat.h>
 #include "definiciones.h"
 #include <unistd.h>
+#include "tiempo.h"
 
 /*****************************************************************
     FUNCIÃ“N PRINCIPAL
@@ -31,6 +32,7 @@
 int main(int argc, char const *argv[])
 {
     // ----------------------- DECLARACIÃ“N DE VAIRABLES USADAS EN MAIN -----------------------
+    double utime0, stime0, wtime0,utime1, stime1, wtime1; //Variables para medición de tiempos
     unsigned long tam;            //varibale que almacena el tamaÃ±o del archivo a leer
     FILE *archivoOriginal = NULL; //Variables para el archivo original
     int i = 0;                    //varibale para loops
@@ -50,6 +52,13 @@ int main(int argc, char const *argv[])
         perror("\nNombre incorrecto o no existe el archivo");
         exit(1); //salimos del programa
     }
+    
+    //******************************************************************	
+	//Iniciar el conteo del tiempo para las evaluaciones de rendimiento
+	//******************************************************************	
+	uswtime(&utime0, &stime0, &wtime0);
+	//******************************************************************
+    
 
     // Obtenemos los detalles del archivo, en este caso el tamaÃ±o
     tam = detallesArchivo(archivoOriginal); // lo almacenamos en tam
@@ -139,6 +148,18 @@ int main(int argc, char const *argv[])
     }
 
     fclose(codificado);
+    
+    
+    //******************************************************************	
+	//Evaluar los tiempos de ejecución 
+	//******************************************************************
+	uswtime(&utime1, &stime1, &wtime1);
+	
+	//Cálculo del tiempo de ejecución del programa
+	printf("\n");
+	printf("real (Tiempo total)  %.10f s\n",  wtime1 - wtime0);
+	printf("\n");
+    
     return 0; //salimos
 }
 

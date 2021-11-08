@@ -24,6 +24,7 @@
 #include <sys/stat.h>
 #include "definiciones.h"
 #include <unistd.h>
+#include "tiempo.h"
 
 /*****************************************************************
     FUNCIÃ“N PRINCIPAL
@@ -31,6 +32,7 @@
 int main(int argc, char const *argv[])
 {   
     // ----------------------- DECLARACIÃ“N DE VAIRABLES USADAS EN MAIN -----------------------
+    double utime0, stime0, wtime0,utime1, stime1, wtime1; //Variables para medición de tiempos
     lista *l = NULL;                                    //variable para la lista
     arbol *ar;                                          //variable para el arbol
     unsigned char caracter = 0;                         //variabel caracter del archivo de frecuencias
@@ -41,6 +43,14 @@ int main(int argc, char const *argv[])
     long i = 0;                                         //variable para loops
     
 
+    
+    
+    //******************************************************************	
+	//Iniciar el conteo del tiempo para las evaluaciones de rendimiento
+	//******************************************************************	
+	uswtime(&utime0, &stime0, &wtime0);
+	//******************************************************************
+    
     // ------------------------------ LECTURA DEL DE FRECUENCIAS ------------------------------
     tablaFrecuencias = fopen(nombreArchivoFrecuencias, "rt");
     //comprobamos que exista el archivo
@@ -115,6 +125,16 @@ int main(int argc, char const *argv[])
     decodificarArchivo(datosCod, tam, l->ar, nombreArchivoCodificado);
 
     fclose(decodificar); //cerramos el archivo
+    
+    //******************************************************************	
+	//Evaluar los tiempos de ejecución 
+	//******************************************************************
+	uswtime(&utime1, &stime1, &wtime1);
+	
+	//Cálculo del tiempo de ejecución del programa
+	printf("\n");
+	printf("real (Tiempo total)  %.10f s\n",  wtime1 - wtime0);
+	printf("\n");
 
     return 0;
 }
